@@ -4,20 +4,21 @@
 #include <string.h>
 
 typedef struct rgba_sum {unsigned int r,g,b,a,count;} rgba_sum;
+typedef struct prgba {unsigned short r,g,b,a;} prgba; // premultiplied rgba
 
-inline static unsigned int pal_diff(rgba p1, rgba p2) {
+inline static unsigned int pal_diff(prgba p1, prgba p2) {
     return (p1.r - p2.r) * (p1.r - p2.r) +
            (p1.g - p2.g) * (p1.g - p2.g) +
            (p1.b - p2.b) * (p1.b - p2.b) +
            (p1.a - p2.a) * (p1.a - p2.a);
 }
 
-inline static unsigned char similarity(const unsigned char c1, const unsigned char c2, const rgba *pal, char *simcache) {
+inline static unsigned char similarity(const unsigned char c1, const unsigned char c2, const prgba *pal, char *simcache) {
     const unsigned int pos = c1<c2 ? (c1<<8)|c2 : (c2<<8)|c1;
     const char res = simcache[pos];
     if (res >= 0) return res;
 
-    const rgba p1 = pal[c1], p2 = pal[c2], avg = {
+    const prgba p1 = pal[c1], p2 = pal[c2], avg = {
         .r = (p1.r + p2.r) / 2,
         .g = (p1.g + p2.g) / 2,
         .b = (p1.b + p2.b) / 2,
@@ -46,11 +47,11 @@ inline static unsigned char similarity(const unsigned char c1, const unsigned ch
     return simcache[pos] = 0;
 }
 
-inline static void add_to_acc(rgba_sum *acc, const unsigned char center, const unsigned char idx, const rgba *pal, char *simcache, unsigned char w) {
+inline static void add_to_acc(rgba_sum *acc, const unsigned char center, const unsigned char idx, const prgba *pal, char *simcache, unsigned char w) {
     unsigned char sim = similarity(center, idx, pal, simcache);
     if (sim) {
         w *= sim;
-        rgba c = pal[idx];
+        prgba c = pal[idx];
         acc->r += c.r * w;
         acc->g += c.g * w;
         acc->b += c.b * w;
@@ -59,14 +60,24 @@ inline static void add_to_acc(rgba_sum *acc, const unsigned char center, const u
     }
 }
 
-void undither(const unsigned char *image, const rgba *pal, const unsigned int width, const unsigned int height, rgba *out) {
+void undither(const unsigned char *image, const rgba *rgba_pal, const unsigned int width, const unsigned int height, rgba *out) {
     char *simcache = malloc(256*256);
     memset(simcache, -1, 256*256);
 
-    for(int y=1; y < height-2; y++) {
-        for(int x=1; x < width-2; x++) {
+    prgba pal[256];
+    for(int i=0; i < 256; i++) {
+        pal[i] = (prgba){
+            .r = rgba_pal[i].r * rgba_pal[i].a,
+            .g = rgba_pal[i].g * rgba_pal[i].a,
+            .b = rgba_pal[i].b * rgba_pal[i].a,
+            .a = rgba_pal[i].a,
+        };
+    }
+
+    for(int y=0; y < height; y++) {
+        for(int x=0; x < width; x++) {
             const int center = image[x+y*width];
-            const rgba cpal = pal[center];
+            const prgba cpal = pal[center];
             rgba_sum acc = {
                 .r = cpal.r * 8,
                 .g = cpal.g * 8,
@@ -75,23 +86,31 @@ void undither(const unsigned char *image, const rgba *pal, const unsigned int wi
                 .count = 8,
             };
 
-            add_to_acc(&acc, center, image[(x-1)+(y-1)*width], pal, simcache, 1);
-            add_to_acc(&acc, center, image[(x+0)+(y-1)*width], pal, simcache, 2);
-            add_to_acc(&acc, center, image[(x+1)+(y-1)*width], pal, simcache, 1);
+            if (y > 0) {
+                if (x > 0) add_to_acc(&acc, center, image[(x-1)+(y-1)*width], pal, simcache, 1);
+                add_to_acc(&acc, center, image[(x+0)+(y-1)*width], pal, simcache, 2);
+                if (x < width-1) add_to_acc(&acc, center, image[(x+1)+(y-1)*width], pal, simcache, 1);
+            }
 
-            add_to_acc(&acc, center, image[(x-1)+(y-0)*width], pal, simcache, 2);
-            add_to_acc(&acc, center, image[(x+1)+(y-0)*width], pal, simcache, 2);
+            if (x > 0) add_to_acc(&acc, center, image[(x-1)+(y-0)*width], pal, simcache, 2);
+            if (x < width-1) add_to_acc(&acc, center, image[(x+1)+(y-0)*width], pal, simcache, 2);
 
-            add_to_acc(&acc, center, image[(x-1)+(y+1)*width], pal, simcache, 1);
-            add_to_acc(&acc, center, image[(x+0)+(y+1)*width], pal, simcache, 2);
-            add_to_acc(&acc, center, image[(x+1)+(y+1)*width], pal, simcache, 1);
+            if (y < height-1) {
+                if (x > 0) add_to_acc(&acc, center, image[(x-1)+(y+1)*width], pal, simcache, 1);
+                add_to_acc(&acc, center, image[(x+0)+(y+1)*width], pal, simcache, 2);
+                if (x < width-1) add_to_acc(&acc, center, image[(x+1)+(y+1)*width], pal, simcache, 1);
+            }
 
-            out[x+y*width] = (rgba){
-                .r = acc.r/acc.count,
-                .g = acc.g/acc.count,
-                .b = acc.b/acc.count,
-                .a = acc.a/acc.count,
-            };
+            if (acc.a) {
+                out[x+y*width] = (rgba){
+                    .r = acc.r / acc.a,
+                    .g = acc.g / acc.a,
+                    .b = acc.b / acc.a,
+                    .a = acc.a / acc.count,
+                };
+            } else {
+                out[x+y*width] = (rgba){0};
+            }
         }
     }
 
