@@ -1,9 +1,10 @@
 CFLAGS ?= -O3 -std=c99 -g
+OBJS = lodepng.o undither.o main.o
 
-undither: lodepng.o undither.o
+undither: $(OBJS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
-undither.c: lodepng.h
+main.c: lodepng.h
 lodepng.c: lodepng.h
 
 lodepng.c:
@@ -13,4 +14,4 @@ lodepng.h:
 	curl -L -o lodepng.h 'http://lpi.googlecode.com/svn/trunk/lodepng.h'
 
 clean:
-	rm -rf undither lodepng.[cho] undither.o
+	rm -rf undither lodepng.[ch] $(OBJS)
