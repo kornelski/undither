@@ -51,6 +51,7 @@ inline static void add_to_acc(rgba_sum *acc, const unsigned char center, const u
     unsigned char sim = similarity(center, idx, pal, simcache);
     if (sim) {
         w *= sim;
+        w *= pal[idx].a;
         prgba c = pal[idx];
         acc->r += c.r * w;
         acc->g += c.g * w;
@@ -78,12 +79,13 @@ void undither(const unsigned char *image, const rgba *rgba_pal, const unsigned i
         for(int x=0; x < width; x++) {
             const int center = image[x+y*width];
             const prgba cpal = pal[center];
+            const int center_w = 8 * cpal.a;
             rgba_sum acc = {
-                .r = cpal.r * 8,
-                .g = cpal.g * 8,
-                .b = cpal.b * 8,
-                .a = cpal.a * 8,
-                .count = 8,
+                .r = cpal.r * center_w,
+                .g = cpal.g * center_w,
+                .b = cpal.b * center_w,
+                .a = cpal.a * center_w,
+                .count = center_w,
             };
 
             if (y > 0) {
