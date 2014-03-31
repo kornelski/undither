@@ -95,10 +95,10 @@ void undither(const unsigned char *image, const rgba *rgba_pal, const unsigned i
             }
 
             if (x > 0) add_to_acc(&acc, center, image[(x-1)+(y-0)*width], pal, simcache, 2);
-            if (x < width-1) add_to_acc(&acc, center, image[(x+1)+(y-0)*width], pal, simcache, 2);
+            if (x < width-1) add_to_acc(&acc, center, image[(x+1)+(y-0)*width], pal, simcache, 3); // floyd-steinberg
 
             if (y < height-1) {
-                if (x > 0) add_to_acc(&acc, center, image[(x-1)+(y+1)*width], pal, simcache, 1);
+                if (x > 0) add_to_acc(&acc, center, image[(x-1)+(y+1)*width], pal, simcache, 2); // floyd-steinberg
                 add_to_acc(&acc, center, image[(x+0)+(y+1)*width], pal, simcache, 2);
                 if (x < width-1) add_to_acc(&acc, center, image[(x+1)+(y+1)*width], pal, simcache, 1);
             }
