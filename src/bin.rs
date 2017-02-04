@@ -1,57 +1,50 @@
-#include "lodepng.h"
-#include "undither.h"
-#include <stdlib.h>
-#include <stdio.h>
+extern crate imgref;
+extern crate lodepng;
+extern crate rgb;
+extern crate undither;
+use imgref::*;
+use lodepng::*;
+use rgb::*;
+use undither::*;
+use std::env;
+use std::process;
 
-int main(int argc, char **argv) {
-    unsigned error;
-    unsigned char* image;
-    unsigned width, height;
-    unsigned char* png;
-    size_t pngsize;
-    LodePNGState state;
+fn main() {
+    let args: Vec<_> = env::args().take(3).collect();
 
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s input-8bit.png output-32bit.png\n\nVersion 0.2, © 2014 Kornel Lesiński <kornel@geekhood.net>\nhttps://github.com/pornel/undither\n\n", argv[0]);
-        return 1;
+    if args.len() != 3 {
+        eprintln!(r"Usage: {} input-8bit.png output-32bit.png
+Version {}, © 2017 Kornel Lesiński <kornel@geekhood.net>
+https://github.com/pornel/undither", args[0], env!("CARGO_PKG_VERSION"));
+        process::exit(1);
     }
 
-    lodepng_state_init(&state);
+    let mut state = State::new();
     state.decoder.color_convert = 0;
-    state.info_raw.colortype = LCT_PALETTE;
-    state.info_raw.bitdepth = 8;
-    error = lodepng_load_file(&png, &pngsize, argv[1]);
-    if (!error) {
-        error = lodepng_decode(&image, &width, &height, &state, png, pngsize);
+    state.info_raw.colortype = ColorType::PALETTE;
+    state.info_raw.set_bitdepth(8);
+    let decoded = state.decode_file(&args[1]).unwrap();
+    if state.info_raw.bitdepth() != 8 || state.info_raw.colortype != ColorType::PALETTE {
+        eprintln!("Only 256-color images are supported");
+        process::exit(1);
     }
-    free(png);
-    if (error) {
-        fprintf(stderr, "error when loading '%s': %s\n", argv[1], lodepng_error_text(error));
-        return error;
-    }
+    let image = match decoded {
+        Image::RawData(image) => image,
+        _ => unreachable!(),
+    };
 
-    if (state.info_raw.bitdepth != 8) {
-        fprintf(stderr, "Only 256-color images are supported\n");
-        return 1;
-    }
+    let pal: Vec<_> = state.info_raw.palette().iter().map(|p| p.rgb()).collect();
 
-    const rgba *pal = (rgba *)state.info_raw.palette;
-    if (!pal || state.info_raw.colortype != LCT_PALETTE) {
-        fprintf(stderr, "No pal?\n");
-        return 1;
-    }
-    rgba *out = malloc(width*height*4);
+    let undith = undither::Undither::new(None);
+    let mut out = Img::new(vec![RGB::new(0,0,0); image.width * image.height], image.width, image.height);
 
-    undither(image, pal, width, height, out);
+    undith.undith_into(ImgRef::new(&image.buffer, image.width, image.height), None, Some(&Pal::new(pal.as_bytes())),
+        0,
+        0,
+        image.width,
+        image.height,
+        &mut out
+    );
 
-    lodepng_state_cleanup(&state);
-    free(image);
-
-    error = lodepng_encode32_file(argv[2], (unsigned char*)out, width, height);
-    if (error) {
-        fprintf(stderr, "error when saving '%s': %s\n", argv[2], lodepng_error_text(error));
-        return error;
-    }
-
-    return 0;
+    encode24_file(&args[2], &out.buf, out.width(), out.height()).unwrap();
 }

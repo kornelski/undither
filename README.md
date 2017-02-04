@@ -5,14 +5,22 @@ Smart filter to remove Floyd-Steinberg dithering from paletted images.
 
 The tool analyses image palette to find optimal blurring threshold. For any two adjacent pixels, if the palette has a color that is between colors of these two pixels, then it's assumed to be an edge.
 
-The algorithm should be useful when converting PNG8 to JPEG or anim-GIF to video (although at the moment the tool only reads PNG).
+The algorithm is useful when converting PNG8 to JPEG or [anim-GIF to video](https://imageoptim.com/api/ungif).
 
 ## Usage
 
-    make
-    ./undither input.png output.png
+### From CLI
 
-The input must be an 8-bit PNG image.
+[Install Rust](https://www.rust-lang.org/install.html) and then run:
+
+```sh
+cargo build --release --features=binary
+./target/release/undither palette-image.png truecolor-output.png
+```
+
+### As a library
+
+See [API reference](https://docs.rs/undither).
 
 ## Examples
 

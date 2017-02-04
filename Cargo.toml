@@ -1,17 +1,28 @@
-CFLAGS ?= -O3 -std=c99 -g
-OBJS = lodepng.o undither.o main.o
+[package]
+authors = ["Kornel Lesiński <kornel@geekhood.net>"]
+categories = ["multimedia::images"]
+description = "Smart filter to remove Floyd-Steinberg dithering from paletted images"
+license = "AGPL-3.0+"
+name = "undither"
+readme = "README.md"
+version = "1.0.0"
 
-undither: $(OBJS)
-	$(CC) $(LDFLAGS) $^ -o $@
+[[bin]]
+doc = false
+name = "undither"
+path = "src/bin.rs"
+required-features = ["binary"]
 
-main.c: lodepng.h
-lodepng.c: lodepng.h
+[dependencies]
+imgref = "1.2.2"
+itertools = "0.5.9"
+loop9 = "0.1.1"
+rgb = "0.7.2"
+vpsearch = "1.3.2"
 
-lodepng.c:
-	curl -L -o lodepng.c 'http://lpi.googlecode.com/svn/trunk/lodepng.cpp'
+[dependencies.lodepng]
+optional = true
+version = "2.0.0"
 
-lodepng.h:
-	curl -L -o lodepng.h 'http://lpi.googlecode.com/svn/trunk/lodepng.h'
-
-clean:
-	rm -rf undither lodepng.[ch] $(OBJS)
+[features]
+binary = ["lodepng"]
