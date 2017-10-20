@@ -2,9 +2,12 @@
 authors = ["Kornel Lesiński <kornel@geekhood.net>"]
 categories = ["multimedia::images"]
 description = "Smart filter to remove Floyd-Steinberg dithering from paletted images"
+documentation = "https://docs.rs/undither"
+homepage = "https://github.com/pornel/undither"
 license = "AGPL-3.0+"
 name = "undither"
 readme = "README.md"
+repository = "https://github.com/pornel/undither.git"
 version = "1.0.0"
 
 [[bin]]
