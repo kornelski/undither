@@ -15,7 +15,7 @@ fn main() {
     if args.len() != 3 {
         eprintln!(r"Usage: {} input-8bit.png output-32bit.png
 Version {}, © 2017 Kornel Lesiński <kornel@geekhood.net>
-https://github.com/pornel/undither", args[0], env!("CARGO_PKG_VERSION"));
+https://github.com/kornelski/undither", args[0], env!("CARGO_PKG_VERSION"));
         process::exit(1);
     }
 

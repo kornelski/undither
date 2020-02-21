@@ -1,10 +1,10 @@
 
-use prewitt::prewitt_squared_img;
-use palalpha::*;
-use pal::*;
+use crate::prewitt::prewitt_squared_img;
+use crate::palalpha::*;
+use crate::pal::*;
 use rgb::*;
 use imgref::*;
-use acc::*;
+use crate::acc::*;
 use loop9::loop9;
 
 pub struct Undither {
@@ -19,7 +19,7 @@ impl Undither {
         }
     }
 
-    pub fn undith_into<Pixel>(&self, src_img: ImgRef<Pixel>, transparent: Option<u8>, local_pal: Option<&Pal>,
+    pub fn undith_into<Pixel>(&self, src_img: ImgRef<'_, Pixel>, transparent: Option<u8>, local_pal: Option<&Pal>,
         left: usize, top: usize, width: usize, height: usize, inout: &mut ImgVec<RGB8>)
         where Pixel: PixAlphaAble + Copy {
 

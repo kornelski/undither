@@ -1,6 +1,6 @@
 use rgb::*;
 use vpsearch::*;
-use palalpha::*;
+use crate::palalpha::*;
 
 fn diff(p1: RGB8, p2: RGB8) -> u32 {
     return ((p1.r as i32 - p2.r as i32) * (p1.r as i32 - p2.r as i32) +

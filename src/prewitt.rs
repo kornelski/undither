@@ -13,12 +13,12 @@ impl ToGray for RGBA8 {
 impl ToGray for RGB8 {
     fn to_gray(self) -> i16 {
         let px = self.map(|c| c as i16);
-        (px.r + px.g + px.g + px.b)
+        px.r + px.g + px.g + px.b
     }
 }
 
-pub fn prewitt_squared_img<T: ToGray + Copy>(input: ImgRef<T>) -> ImgVec<u16> {
-    let gray: Vec<_> = input.buf.iter().cloned().map(|px|px.to_gray()).collect();
+pub fn prewitt_squared_img<T: ToGray + Copy>(input: ImgRef<'_, T>) -> ImgVec<u16> {
+    let gray: Vec<_> = input.pixels().map(|px|px.to_gray()).collect();
     let gray = input.new_buf(gray);
 
     let mut prew = Vec::with_capacity(gray.width() * gray.height());

@@ -1,5 +1,5 @@
 use rgb::*;
-use acc::Similarity;
+use crate::acc::Similarity;
 use std::ops::Index;
 use std::cmp::PartialEq;
 use std::cell::{RefMut, RefCell};
@@ -18,7 +18,7 @@ impl Pal {
         }
     }
 
-    pub fn similarity(&self) -> RefMut<Similarity> {
+    pub fn similarity(&self) -> RefMut<'_, Similarity> {
         self.similarity.borrow_mut()
     }
 }
