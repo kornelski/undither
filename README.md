@@ -1,11 +1,11 @@
-Undither
-========
+Undo Dithering
+==============
 
-Smart filter to remove Floyd-Steinberg dithering from paletted images.
+Smart filter to remove Floyd-Steinberg dithering from paletted images. It's smarter than "smart blur", because it takes into account limitations of image palette to decide what not to blur.
 
 The tool analyses image palette to find optimal blurring threshold. For any two adjacent pixels, if the palette has a color that is between colors of these two pixels, then it's assumed to be an edge.
 
-The algorithm is useful when converting PNG8 to JPEG or [anim-GIF to video](https://imageoptim.com/api/ungif).
+The algorithm is useful when converting PNG8 to JPEG, or [anim-GIF to video](https://imageoptim.com/api/ungif).
 
 ## Usage
 
@@ -14,8 +14,8 @@ The algorithm is useful when converting PNG8 to JPEG or [anim-GIF to video](http
 [Install Rust](https://www.rust-lang.org/install.html) and then run:
 
 ```sh
-cargo build --release --features=binary
-./target/release/undither palette-image.png truecolor-output.png
+cargo install undither --features=binary
+undither palette-image.png truecolor-output.png
 ```
 
 ### As a library

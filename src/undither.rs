@@ -33,13 +33,11 @@ impl Undither {
             let out = out.sub_image(left, top, width, height);
             prewitt_squared_img(out)
         };
-        let prewitt_stride = prewitt_image.stride();
 
         let prewitt_high_threshold = 256;
         let prewitt_low_threshold = 160;
 
-        let out = inout.sub_image_mut(left, top, width, height);
-        let out_stride = out.stride();
+        let mut out = inout.sub_image_mut(left, top, width, height);
 
         loop9(src_img, left, top, width, height, |x,y, prev, curr, next|{
                 let center = curr.curr;
@@ -47,7 +45,7 @@ impl Undither {
                     return;
                 }
 
-                let prewitt = prewitt_image.buf[x + y*prewitt_stride];
+                let prewitt = prewitt_image[(x,y)];
                 let center_weight = if prewitt > prewitt_low_threshold {
                     if prewitt > prewitt_high_threshold {return;}
                     24
@@ -68,7 +66,7 @@ impl Undither {
                 acc.add(next.curr);
                 acc.add(next.next);
 
-                out.buf[x + y*out_stride] = acc.result();
+                out[(x,y)] = acc.result();
         });
     }
 }

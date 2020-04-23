@@ -4,12 +4,13 @@ categories = ["multimedia::images"]
 description = "Smart filter to remove Floyd-Steinberg dithering from paletted images"
 documentation = "https://docs.rs/undither"
 homepage = "https://lib.rs/undither"
-license = "AGPL-3.0+"
+license = "GPL-3.0+"
 name = "undither"
 readme = "README.md"
 repository = "https://github.com/kornelski/undither.git"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2018"
+keywords = ["dithering", "floyd-steinberg", "smart", "blur", "filter"]
 
 [[bin]]
 doc = false
@@ -18,11 +19,11 @@ path = "src/bin.rs"
 required-features = ["binary"]
 
 [dependencies]
-imgref = "1.4.0"
-itertools = "0.8.2"
+imgref = "1.4.3"
+itertools = "0.9.0"
 loop9 = "0.1.1"
-rgb = "0.8.16"
-vpsearch = "1.3.5"
+rgb = "0.8.17"
+vpsearch = "2.0.0"
 
 [dependencies.lodepng]
 optional = true
@@ -30,3 +31,6 @@ version = "2.5.0"
 
 [features]
 binary = ["lodepng"]
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]

@@ -46,5 +46,7 @@ https://github.com/kornelski/undither", args[0], env!("CARGO_PKG_VERSION"));
         &mut out
     );
 
-    encode24_file(&args[2], &out.buf, out.width(), out.height()).unwrap();
+    let (buf, w, h) = out.into_contiguous_buf();
+
+    encode24_file(&args[2], &buf, w, h).unwrap();
 }
