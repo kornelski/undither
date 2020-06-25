@@ -19,7 +19,7 @@ impl ToGray for RGB8 {
 
 pub fn prewitt_squared_img<T: ToGray + Copy>(input: ImgRef<'_, T>) -> ImgVec<u16> {
     let gray: Vec<_> = input.pixels().map(|px|px.to_gray()).collect();
-    let gray = input.new_buf(gray);
+    let gray = Img::new(gray, input.width(), input.height());
 
     let mut prew = Vec::with_capacity(gray.width() * gray.height());
     loop9(gray.as_ref(), 0,0, gray.width(), gray.height(), |_x,_y,top,mid,bot|{
