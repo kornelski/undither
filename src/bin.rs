@@ -20,7 +20,7 @@ https://github.com/kornelski/undither", args[0], env!("CARGO_PKG_VERSION"));
     }
 
     let mut state = State::new();
-    state.decoder.color_convert = 0;
+    state.decoder.color_convert = false;
     state.info_raw.colortype = ColorType::PALETTE;
     state.info_raw.set_bitdepth(8);
     let decoded = state.decode_file(&args[1]).unwrap();
