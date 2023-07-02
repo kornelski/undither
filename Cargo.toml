@@ -8,8 +8,8 @@ license = "GPL-3.0+"
 name = "undither"
 readme = "README.md"
 repository = "https://github.com/kornelski/undither.git"
-version = "1.0.6"
-edition = "2018"
+version = "1.0.7"
+edition = "2021"
 keywords = ["dithering", "floyd-steinberg", "smart", "blur", "filter"]
 
 [[bin]]
@@ -19,18 +19,21 @@ path = "src/bin.rs"
 required-features = ["binary"]
 
 [dependencies]
-imgref = "1.7.1"
-itertools = "0.10.0"
+imgref = "1.9.4"
+itertools = "0.11.0"
 loop9 = "0.1.3"
-rgb = "0.8.25"
+rgb = "0.8.36"
 vpsearch = "2.0.1"
 
 [dependencies.lodepng]
 optional = true
-version = "3.2.2"
+version = "3.7.2"
 
 [features]
 binary = ["lodepng"]
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
+
+[badges]
+maintenance = { status = "passively-maintained" }
