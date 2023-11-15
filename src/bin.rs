@@ -1,13 +1,9 @@
-extern crate imgref;
-extern crate lodepng;
-extern crate rgb;
-extern crate undither;
 use imgref::*;
 use lodepng::*;
 use rgb::*;
-use undither::*;
 use std::env;
 use std::process;
+use undither::*;
 
 fn main() {
     let args: Vec<_> = env::args().take(3).collect();
@@ -19,12 +15,12 @@ https://github.com/kornelski/undither", args[0], env!("CARGO_PKG_VERSION"));
         process::exit(1);
     }
 
-    let mut state = State::new();
-    state.decoder.color_convert = false;
-    state.info_raw.colortype = ColorType::PALETTE;
-    state.info_raw.set_bitdepth(8);
+    let mut state = Decoder::new();
+    state.color_convert(false);
+    state.info_raw_mut().colortype = ColorType::PALETTE;
+    state.info_raw_mut().set_bitdepth(8);
     let decoded = state.decode_file(&args[1]).unwrap();
-    if state.info_raw.bitdepth() != 8 || state.info_raw.colortype != ColorType::PALETTE {
+    if state.info_raw().bitdepth() != 8 || state.info_raw().colortype != ColorType::PALETTE {
         eprintln!("Only 256-color images are supported");
         process::exit(1);
     }
@@ -33,7 +29,7 @@ https://github.com/kornelski/undither", args[0], env!("CARGO_PKG_VERSION"));
         _ => unreachable!(),
     };
 
-    let pal: Vec<_> = state.info_raw.palette().iter().map(|p| p.rgb()).collect();
+    let pal: Vec<_> = state.info_raw().palette().iter().map(|p| p.rgb()).collect();
 
     let undith = undither::Undither::new(None);
     let mut out = Img::new(vec![RGB::new(0,0,0); image.width * image.height], image.width, image.height);
@@ -43,7 +39,7 @@ https://github.com/kornelski/undither", args[0], env!("CARGO_PKG_VERSION"));
         0,
         image.width,
         image.height,
-        &mut out
+        &mut out,
     );
 
     let (buf, w, h) = out.into_contiguous_buf();

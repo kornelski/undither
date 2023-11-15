@@ -1,11 +1,10 @@
-
+use crate::acc::Acc;
+use crate::pal::Pal;
+use crate::palalpha::PixAlphaAble;
 use crate::prewitt::prewitt_squared_img;
-use crate::palalpha::*;
-use crate::pal::*;
-use rgb::*;
-use imgref::*;
-use crate::acc::*;
+use imgref::{ImgRef, ImgVec};
 use loop9::loop9;
+use rgb::RGB8;
 
 pub struct Undither {
     global_pal: Option<Pal>,
@@ -15,7 +14,7 @@ impl Undither {
     #[must_use]
     pub fn new(global_raw_pal: Option<&[u8]>) -> Self {
         Undither {
-            global_pal: global_raw_pal.map(|palette_bytes| Pal::new(palette_bytes)),
+            global_pal: global_raw_pal.map(Pal::new),
         }
     }
 
@@ -26,7 +25,7 @@ impl Undither {
         let (left, top, width, height) = expand_by_1(left, top, width, height, inout.width(), inout.height());
 
         let pal = local_pal.or(self.global_pal.as_ref()).expect("there must be some palette");
-        let mut sim = &mut *pal.similarity();
+        let sim = &mut *pal.similarity();
 
         let prewitt_image = {
             let out = inout.as_ref();
@@ -45,15 +44,17 @@ impl Undither {
                     return;
                 }
 
-                let prewitt = prewitt_image[(x,y)];
+                let prewitt = prewitt_image[(x, y)];
                 let center_weight = if prewitt > prewitt_low_threshold {
-                    if prewitt > prewitt_high_threshold {return;}
+                    if prewitt > prewitt_high_threshold {
+                        return;
+                    }
                     24
                 } else {
                     8
                 } as u32;
 
-                let mut acc = Acc::new(center.pal_index(), center_weight, transparent, &mut sim);
+                let mut acc = Acc::new(center.pal_index(), center_weight, transparent, sim);
 
                 acc.add(prev.prev);
                 acc.add(prev.curr);
@@ -66,8 +67,9 @@ impl Undither {
                 acc.add(next.curr);
                 acc.add(next.next);
 
-                out[(x,y)] = acc.result();
-        });
+                out[(x, y)] = acc.result();
+            },
+        );
     }
 }
 

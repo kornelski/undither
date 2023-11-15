@@ -1,8 +1,8 @@
-use rgb::*;
 use crate::acc::Similarity;
-use std::ops::Index;
+use rgb::RGB8;
+use std::cell::{RefCell, RefMut};
 use std::cmp::PartialEq;
-use std::cell::{RefMut, RefCell};
+use std::ops::Index;
 
 pub struct Pal {
     pal: Vec<RGB8>,
@@ -10,11 +10,12 @@ pub struct Pal {
 }
 
 impl Pal {
+    #[must_use]
     pub fn new(palette_bytes: &[u8]) -> Self {
         let pal = to_rgb(palette_bytes);
         Pal {
             similarity: RefCell::new(Similarity::new(pal.clone())),
-            pal: pal,
+            pal,
         }
     }
 
@@ -42,9 +43,9 @@ fn to_rgb(palette_bytes: &[u8]) -> Vec<RGB8> {
 
 #[test]
 fn paltest() {
-    let a = vec![1,2,3];
-    let b = vec![1,2,3];
-    let c = vec![1,1,1];
+    let a = vec![1, 2, 3];
+    let b = vec![1, 2, 3];
+    let c = vec![1, 1, 1];
 
     assert!(Pal::new(&a) == Pal::new(&a));
     assert!(Pal::new(&b) == Pal::new(&a));

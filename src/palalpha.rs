@@ -6,16 +6,15 @@ pub struct PalAlpha {
 
 impl From<u8> for PalAlpha {
     fn from(idx: u8) -> Self {
-        PalAlpha{idx:idx, a:true}
+        PalAlpha { idx, a: true }
     }
 }
 
 impl From<bool> for PalAlpha {
     fn from(a: bool) -> Self {
-        PalAlpha{idx:0, a:a}
+        PalAlpha { idx: 0, a }
     }
 }
-
 
 pub trait PixAlphaAble: Copy {
     fn pal_index(&self) -> usize;
@@ -33,7 +32,7 @@ impl PixAlphaAble for u8 {
         if let Some(index) = transparent_index {
             return *self == index;
         }
-        return false;
+        false
     }
 }
 
@@ -48,6 +47,6 @@ impl PixAlphaAble for PalAlpha {
         if let Some(index) = transparent_index {
             return self.idx == index;
         }
-        return !self.a;
+        !self.a
     }
 }

@@ -1,11 +1,11 @@
-use rgb::*;
-use vpsearch::*;
-use crate::palalpha::*;
+use crate::palalpha::PixAlphaAble;
+use rgb::{ComponentMap, RGB, RGB8};
+use vpsearch::{BestCandidate, MetricSpace, Tree};
 
 fn diff(p1: RGB8, p2: RGB8) -> u32 {
-    return ((p1.r as i32 - p2.r as i32) * (p1.r as i32 - p2.r as i32) +
-            (p1.g as i32 - p2.g as i32) * (p1.g as i32 - p2.g as i32) +
-            (p1.b as i32 - p2.b as i32) * (p1.b as i32 - p2.b as i32)) as u32;
+    ((i32::from(p1.r) - i32::from(p2.r)) * (i32::from(p1.r) - i32::from(p2.r)) +
+            (i32::from(p1.g) - i32::from(p2.g)) * (i32::from(p1.g) - i32::from(p2.g)) +
+            (i32::from(p1.b) - i32::from(p2.b)) * (i32::from(p1.b) - i32::from(p2.b))) as u32
 }
 
 struct OrphanRulesSuck;
@@ -13,7 +13,7 @@ struct OrphanRulesSuck;
 impl MetricSpace<OrphanRulesSuck> for RGB8 {
     type UserData = ();
     type Distance = u32;
-    fn distance(&self, other: &RGB8, _: &()) -> Self::Distance {
+    fn distance(&self, other: &RGB8, (): &()) -> Self::Distance {
         diff(*self, *other)
     }
 }
@@ -25,7 +25,7 @@ struct ExceptTheseTwo {
 
 impl BestCandidate<RGB8, OrphanRulesSuck> for ExceptTheseTwo {
     type Output = u32;
-    fn consider(&mut self, _: &RGB8, dist: u32, idx: usize, _:&()) {
+    fn consider(&mut self, _: &RGB8, dist: u32, idx: usize, (): &()) {
         if dist < self.distance {
             if idx == self.index1 || idx == self.index2 {
                 return;
@@ -36,31 +36,32 @@ impl BestCandidate<RGB8, OrphanRulesSuck> for ExceptTheseTwo {
     fn distance(&self) -> u32 {
         self.distance
     }
-    fn result(self, _:&()) -> u32 {
+    fn result(self, (): &()) -> u32 {
         self.distance
     }
 }
 
 pub struct Similarity {
     pal: Vec<RGB8>,
-    cache: [i8; 256*256],
+    cache: [i8; 256 * 256],
     vp: Tree<RGB8, OrphanRulesSuck>,
 }
 
 impl Similarity {
     pub fn new(pal: Vec<RGB8>) -> Self {
-
         let uhpal = unsafe {
             use std::slice;
-            slice::from_raw_parts(pal.as_ptr() as *const _, pal.len())
+            slice::from_raw_parts(pal.as_ptr().cast(), pal.len())
         };
 
         let mut s = Similarity {
             vp: Tree::new(uhpal),
-            pal: pal,
-            cache: [-1; 256*256],
+            pal,
+            cache: [-1; 256 * 256],
         };
-        for i in 0..255 {s.cache[i<<8|i] = 7;}
+        for i in 0..255 {
+            s.cache[i << 8 | i] = 7;
+        }
         s
     }
 
@@ -80,9 +81,9 @@ impl Similarity {
         let p1 = self.pal[index1];
 
         let avg = RGB8 {
-            r: ((p1.r as u16 + p2.r as u16) / 2) as u8,
-            g: ((p1.g as u16 + p2.g as u16) / 2) as u8,
-            b: ((p1.b as u16 + p2.b as u16) / 2) as u8,
+            r: ((u16::from(p1.r) + u16::from(p2.r)) / 2) as u8,
+            g: ((u16::from(p1.g) + u16::from(p2.g)) / 2) as u8,
+            b: ((u16::from(p1.b) + u16::from(p2.b)) / 2) as u8,
         };
 
         let distance = diff(avg, p1);
@@ -92,8 +93,8 @@ impl Similarity {
         // but it seems to work out in practice anyway.
         let min_diff = self.vp.find_nearest_custom(&avg, &(), ExceptTheseTwo{
             distance: 1<<31,
-            index1: index1,
-            index2: index2,
+            index1,
+            index2,
         });
 
         let res = if min_diff >= distance*2 {8}
@@ -102,10 +103,9 @@ impl Similarity {
              else {0};
 
         self.cache[pos] = res;
-        return (res as u32, p2);
+        (res as u32, p2)
     }
 }
-
 
 pub struct Acc<'sim> {
     similarity: &'sim mut Similarity,
@@ -120,11 +120,11 @@ impl<'pal, 'sim> Acc<'sim> {
     pub fn new(center_index: usize, weight: u32, transparent: Option<u8>, similarity: &'sim mut Similarity) -> Self {
         let px = similarity.pal(center_index);
         Acc {
-            transparent: transparent,
-            similarity: similarity,
-            center_index: center_index,
-            weight: weight,
-            acc: px.map(|c| c as u32 * weight),
+            transparent,
+            similarity,
+            center_index,
+            weight,
+            acc: px.map(|c| u32::from(c) * weight),
         }
     }
 
@@ -136,9 +136,9 @@ impl<'pal, 'sim> Acc<'sim> {
         let new_index = px.pal_index();
         let (weight, new_px) = self.similarity.compare(self.center_index, new_index);
         if weight > 0 {
-            self.acc.r += new_px.r as u32 * weight;
-            self.acc.g += new_px.g as u32 * weight;
-            self.acc.b += new_px.b as u32 * weight;
+            self.acc.r += u32::from(new_px.r) * weight;
+            self.acc.g += u32::from(new_px.g) * weight;
+            self.acc.b += u32::from(new_px.b) * weight;
             self.weight += weight;
         }
     }

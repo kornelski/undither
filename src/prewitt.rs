@@ -1,6 +1,6 @@
-use rgb::*;
-use imgref::*;
-use loop9::{Triple,loop9};
+use imgref::{Img, ImgRef, ImgVec};
+use loop9::{loop9, Triple};
+use rgb::{ComponentMap, RGB8, RGBA8};
 
 pub trait ToGray {
     fn to_gray(self) -> i16;
@@ -12,13 +12,13 @@ impl ToGray for RGBA8 {
 }
 impl ToGray for RGB8 {
     fn to_gray(self) -> i16 {
-        let px = self.map(|c| c as i16);
+        let px = self.map(i16::from);
         px.r + px.g + px.g + px.b
     }
 }
 
 pub fn prewitt_squared_img<T: ToGray + Copy>(input: ImgRef<'_, T>) -> ImgVec<u16> {
-    let gray: Vec<_> = input.pixels().map(|px|px.to_gray()).collect();
+    let gray: Vec<_> = input.pixels().map(|px| px.to_gray()).collect();
     let gray = Img::new(gray, input.width(), input.height());
 
     let mut prew = Vec::with_capacity(gray.width() * gray.height());
@@ -45,14 +45,14 @@ pub fn prewitt_squared<T: Into<i16>>(top_prev: T, top_curr: T, top_next: T, mid_
     let bot_curr = bot_curr.into();
     let bot_next = bot_next.into();
 
-    let gx = (
+    let gx = i32::from(
         top_next - top_prev +
         mid_next - mid_prev +
-        bot_next - bot_prev) as i32;
+        bot_next - bot_prev);
 
-    let gy = (
+    let gy = i32::from(
         bot_prev + bot_curr + bot_next -
-        top_prev - top_curr - top_next) as i32;
+        top_prev - top_curr - top_next);
 
     ((gx*gx + gy*gy) / 256) as u16
 }
